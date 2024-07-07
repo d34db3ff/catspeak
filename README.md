@@ -1,6 +1,6 @@
 # catspeak
 
-A trival stack language with first-class cats()
+A trivial stack language with first-class cats()
 
 ## Usage
 

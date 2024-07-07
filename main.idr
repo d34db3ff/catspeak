@@ -7,17 +7,10 @@ import Data.Maybe
 import System.File
 import System
 
-data Operator : Type where
-  (+) : Operator
-  (*) : Operator
-  Store : Operator
-  Restore : Operator
-  Pop : Operator
-  Print : Operator
-  Nop : Operator
+data Operator = (+) | (*) | Store | Restore | Pop | Print | Nop
 
 implementation Cast String Operator where
-  cast c = case c of
+  cast str = case str of
                 "^" => (+)
                 "w" => (*)
                 "hiss" => Pop
@@ -36,13 +29,8 @@ as_token str with (parseInteger str)
   as_token str | Nothing = Op (cast str) --parseInteger "+" == Just 0 which does not make any sense to me
   as_token str | (Just n) = Niteral n
 
-
-parser : List String -> List Token
-parser [] = []
-parser (str :: strs) = as_token str :: parser strs
-
-tokenizer : String -> List String
-tokenizer str = filter (\s => length s /= 0) $ forget (split (=='*') str)
+tokenize : String -> List Token
+tokenize str = map as_token $ filter (\s => length s /= 0) $ forget (split (=='*') str)
 
 eval_ind : {stack : List Integer} -> {storage : SortedMap Integer Integer} -> {msg : List Char} -> List Token -> Maybe (Integer, List Char)  
 eval_ind [] {stack = [i]} = Just (i, msg)
@@ -59,7 +47,7 @@ eval_ind ((Op Nop) :: xs) = eval_ind xs {stack = stack} {storage = storage} {msg
 eval_ind _ = Nothing 
 
 eval_str : String -> Maybe (Integer, List Char)
-eval_str str = eval_ind {stack = []} {storage = empty} {msg = []} $ parser $ tokenizer str
+eval_str str = eval_ind {stack = []} {storage = empty} {msg = []} $ tokenize str
 
 eval_file : (handle : File) -> IO ()
 eval_file handle = do 
@@ -83,6 +71,6 @@ main : IO ()
 main = do
   args <- getArgs
   case args of
-       [] => putStr "empty argv list?"--eval "" 
+       [] => putStr "empty argv list?" 
        (arg0 :: []) => eval_filename ""
        (_ :: arg1 :: args) => eval_filename arg1
